@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>QRコード生成</title>
+    <script src="js/pc.js"></script>    
+    <script src="js/jquery-3.7.1.min.js"></script>
+    <script src="js/jquery.qrcode.min.js"></script>
+</head>
+<body onload="cameraInitSmartphoneSupport()">
+    <div>
+      <video id="camera" autoplay muted playsinline></video>
+      <canvas id="canvas"> </canvas>
+    </div>
+    <div class="output">
+    </div>
+    <div id="qrcode"></div>
+    <script>
+    // QRコード作成
+    const searchParams = new URLSearchParams(window.location.search);
+    $('#qrcode').qrcode( location.origin +"/mobile/mobile_index.html?uid="+searchParams.get('uid'));
+    
+    // ポーリング
+    const intervalSec = 1;
+    function sleepByPromise(sec) {
+        return new Promise(resolve => setTimeout(resolve, sec*1000));
+    }
+    const wait = async () => {
+        while (true) {
+            checkShot();
+            await sleepByPromise(intervalSec);
+        }
+    };
+    
+    function checkShot(){            
+            // URL取得
+            let urlWebAPI = location.origin + "/filectrl/check/" + searchParams.get('uid');
+            
+            // GET
+            $.ajax({
+                url: urlWebAPI,
+                type: 'GET',
+                processData: false,
+                crossDomain: true,
+                scriptCharset: 'utf-8',
+                cache: false,
+                async: false,
+                success: function () {
+                    shot();
+                    uploadPhot();
+                },
+                error: function () {
+                }
+            }).responseText;
+    }
+    
+    // 撮影後、画像をアップロード
+    function uploadPhot() {
+        // URL取得
+        let urlWebAPI = location.origin + "/filectrl/upload";
+            
+        let uidval = searchParams.get('uid');
+        let base64 = document.getElementById('canvas').toDataURL('image/png');
+        
+        // JSONパラメーター作成
+        let requestJson = {
+            uid: uidval,
+            image: base64
+        };
+
+        // POST
+        $.ajax({
+            url: urlWebAPI,
+            type: 'POST',
+            data: JSON.stringify(requestJson),
+            contentType: 'application/json',
+            processData: false,
+            crossDomain: true,
+            scriptCharset: 'utf-8',
+            cache: false,
+            async: false,
+            success: function () {
+                deleteShot();
+            },
+            error: function () {
+            }
+        }).responseText;
+    }
+
+    // 撮影後、撮影フラグファイルを削除
+    function deleteShot(){            
+            // URL取得
+            let urlWebAPI = location.origin + "/filectrl/clear/" + searchParams.get('uid');
+            
+            // DELETE
+            $.ajax({
+                url: urlWebAPI,
+                type: 'DELETE',
+                processData: false,
+                crossDomain: true,
+                scriptCharset: 'utf-8',
+                cache: false,
+                async: false,
+                success: function () {
+                },
+                error: function () {
+                }
+            }).responseText;
+    }
+    
+    // ポーリング開始
+    wait();
+    
+    </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<html>
+<head>
+    <script src="js/jquery-3.7.1.min.js"></script>
+</head>
+<meta charset="UTF-8">
+<body>
+  <div>
+    <button onclick="StartShot()">撮影</button>
+    <button onclick="GetShot()">ダウンロード</button>
+    
+    <script type="text/javascript">
+        const searchParams = new URLSearchParams(window.location.search);
+
+        function StartShot() {
+            // URL取得
+            let urlWebAPI = location.origin + "/filectrl/uid";
+            
+            let uidval = searchParams.get('uid');
+            // JSONパラメーター作成
+            let requestJson = {
+                uid: uidval,
+            };
+
+            // POST
+            $.ajax({
+                url: urlWebAPI,
+                type: 'POST',
+                data: JSON.stringify(requestJson),
+                contentType: 'application/json',
+                processData: false,
+                crossDomain: true,
+                scriptCharset: 'utf-8',
+                cache: false,
+                async: false,
+                success: function () {
+                    alert('POST成功\n');
+                },
+                error: function () {
+                    alert('POST失敗\n');
+                }
+            }).responseText;
+        }
+        function GetShot() {
+            // URL取得
+            let urlWebAPI = location.origin + "/filectrl/uid/" + searchParams.get('uid');
+            
+            let fileName = searchParams.get('uid') + ".png";
+
+            $('<a>', {
+                href: urlWebAPI,
+                download: fileName
+            }).appendTo(document.body)[0].click();                    
+        }
+    </script>
+  </div>
+</body>
+</html>
